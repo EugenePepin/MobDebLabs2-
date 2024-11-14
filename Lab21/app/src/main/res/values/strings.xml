@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Lab2.1</string>
+    <string name="yes_button">Так</string>
+    <string name="no_button">Ні</string>
+    <string name="continue_button">Продовжити</string>
+    <string name="info_text">Чи співпадає назва кольору з кольором?</string>
+    <string name="result_text">Кількість правильних відповідей:</string>
+
+</resources>
