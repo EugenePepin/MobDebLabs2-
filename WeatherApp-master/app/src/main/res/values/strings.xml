@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name" translatable="false">WeatherApp</string>
+    <string name="search_bar">Search…</string>
+    <string name="tabs_hours">Hours</string>
+    <string name="tabs_days">Days</string>
+    <string name="test">TEST</string>
+    <string name="menu_setting">Settings</string>
+    <string name="setting_list_language_english" translatable="false">English</string>
+    <string name="setting_list_language_ukrainian" translatable="false">Українська</string>
+    <string name="setting_list_temp_unit_C">Celsius</string>
+    <string name="setting_list_temp_unit_F">Fahrenheit</string>
+    <string name="dialog_manager_error">Error!</string>
+    <string name="dialog_manager_location_disabled">Location is disabled. Do you want enable it?</string>
+    <string name="dialog_manager_incorrect_city_name">Incorrect city name. Try again…</string>
+    <string name="dialog_manager_сant_connect_to_network">Can\'t connect to the network. Try again…</string>
+    <string name="dialog_manager_yes">Yes</string>
+    <string name="dialog_manager_no">No</string>
+    <string name="dialog_manager_ok" translatable="false">OK</string>
+</resources>

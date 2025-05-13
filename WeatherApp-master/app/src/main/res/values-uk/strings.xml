@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Погода</string>
+    <string name="settings">Налаштування</string>
+    <string name="language">Мова</string>
+    <string name="choose_language">Оберіть мову</string>
+    <string name="english">Англійська</string>
+    <string name="ukrainian">Українська</string>
+    <string name="search_bar">Пошук…</string>
+    <string name="tabs_hours">Години</string>
+    <string name="tabs_days">Дні</string>
+    <string name="test">ТЕСТ</string>
+    <string name="menu_setting">Налаштування</string>
+    <string name="setting_list_temp_unit_C">Цельсій</string>
+    <string name="setting_list_temp_unit_F">Фаренгейти</string>
+    <string name="dialog_manager_error">Помилка!</string>
+    <string name="dialog_manager_location_disabled">Місцезнаходженння вимкнено. Чи бажаєте ви ввімкнути його?</string>
+    <string name="dialog_manager_yes">Так</string>
+    <string name="dialog_manager_no">Ні</string>
+    <string name="dialog_manager_incorrect_city_name">Ви ввели неправильне ім\'я міста. Спробуйте ще раз…</string>
+    <string name="dialog_manager_сant_connect_to_network">Неможливо під\'єднатись до мережі. Спробуйте ще раз…</string>
+</resources>
