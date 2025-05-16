@@ -10,11 +10,6 @@
     <string name="content_description_delete_image">Видалити місто</string>
     <string name="setting_list_temp_unit_C">Цельсій</string>
     <string name="setting_list_temp_unit_F">Фаренгейти</string>
-    <string name="dialog_manager_error">Помилка!</string>
-    <string name="dialog_manager_location_disabled">Місцезнаходженння вимкнено. Чи бажаєте ви ввімкнути його?</string>
-    <string name="dialog_manager_yes">Так</string>
-    <string name="dialog_manager_no">Ні</string>
-    <string name="dialog_manager_incorrect_city_name">Ви ввели неправильне ім\'я міста. Спробуйте ще раз…</string>
     <string name="dialog_manager_сant_connect_to_network">Неможливо під\'єднатись до мережі. Спробуйте ще раз…</string>
     <string name="toast_message_city_added">Місто додано до обраних!</string>
     <string name="toast_message_city_deleted">Місто видалено з обраних!</string>
@@ -22,5 +17,5 @@
     <string name="toast_permission_true">Дозвіл надано!</string>
     <string name="toast_permission_false">Дозвіл не надано</string>
     <string name="content_description_add_city">Додати місто</string>
-    <string name="toast_message_offline_data">Відображаються дані з останнього оновлення</string>
+
 </resources>

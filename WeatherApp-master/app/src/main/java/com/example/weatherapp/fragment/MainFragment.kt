@@ -67,13 +67,16 @@ class MainFragment : Fragment() {
     private lateinit var tabList: List<String>
     private val dataModel: MainViewModel by activityViewModels()
     private val sharedViewModel: SharedViewModel by activityViewModels()
+    private var currentLocation: String? = null
+    private var isManualCitySelected = false
+    private var isLocationDialogShown = false
+
     class SharedViewModel : ViewModel() {
         var lastUpdated: String = ""
     }
     private val fragmentList = listOf(
         HoursFragment.NewInstance(), DaysFragment.NewInstance()
     )
-    private var currentLocation: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,8 +97,12 @@ class MainFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        if (isLocationEnabled()) {
-            getLocation()
+        if (!isManualCitySelected) {
+            if (isLocationEnabled()) {
+                getLocation()
+            } else if (!isLocationDialogShown) {
+                checkLocationMessage()
+            }
         }
         backgroundChange()
         updateCurrentCard()
@@ -110,6 +117,7 @@ class MainFragment : Fragment() {
         checkLocationMessage()
         updateCurrentCard()
         backgroundChange()
+
     }
 
 
@@ -162,6 +170,7 @@ class MainFragment : Fragment() {
             .addOnCompleteListener {
                 val location = "${it.result.latitude},${it.result.longitude}"
                 currentLocation = location
+                isManualCitySelected = false
                 requestCurrentWeatherData(location)
             }
     }
@@ -176,7 +185,10 @@ class MainFragment : Fragment() {
 
     //виведення AlertDialog при вимкненому розташуванні, і перекидування до налаштувань
     private fun checkLocationMessage() {
-        if (!isLocationEnabled()) {
+        if (isLocationEnabled()) {
+            getLocation()
+        } else {
+            isLocationDialogShown = true
             DialogManager.locationDialog(requireContext(), object : DialogManager.Listener {
                 override fun onClick(name: String?) {
                     startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
@@ -192,6 +204,7 @@ class MainFragment : Fragment() {
 
     private fun requestCurrentWeatherData(city: String) {
         currentLocation = city
+        isManualCitySelected = true
         val lang = SharedPreferences.getLanguage(requireContext())
         val translatedCity = if (lang == "uk") {
             CityTranslations.translateToEnglish(city)
@@ -394,7 +407,12 @@ class MainFragment : Fragment() {
     private fun buttonsInit() = with(binding) {
         syncButton.setOnClickListener {
             tabLayout.selectTab(tabLayout.getTabAt(0))
-            currentLocation?.let { requestCurrentWeatherData(it) }
+                currentLocation?.let { requestCurrentWeatherData(it) }
+            AnimationUtils.startUpdateIconRotateAnimation(binding.syncButton)
+        }
+        locationSyncButton.setOnClickListener{
+            tabLayout.selectTab(tabLayout.getTabAt(0))
+            checkLocationMessage()
             AnimationUtils.startUpdateIconRotateAnimation(binding.syncButton)
         }
 
