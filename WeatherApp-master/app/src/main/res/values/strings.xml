@@ -7,8 +7,10 @@
     <string name="menu_setting">Settings</string>
     <string name="setting_list_language_english" translatable="false">English</string>
     <string name="setting_list_language_ukrainian" translatable="false">Українська</string>
+    <string name="setting_list_language_label">Choose a language:</string>
     <string name="setting_list_temp_unit_C">Celsius</string>
     <string name="setting_list_temp_unit_F">Fahrenheit</string>
+    <string name="setting_list_temp_unit_label">Choose a unit of temperature:</string>
     <string name="dialog_manager_error">Error!</string>
     <string name="dialog_manager_location_disabled">Location is disabled. Do you want enable it?</string>
     <string name="dialog_manager_incorrect_city_name">Incorrect city name. Try again…</string>
@@ -16,4 +18,12 @@
     <string name="dialog_manager_yes">Yes</string>
     <string name="dialog_manager_no">No</string>
     <string name="dialog_manager_ok" translatable="false">OK</string>
+    <string name="toast_message_city_added">City added to favorites!</string>
+    <string name="toast_message_city_deleted">City removed from list!</string>
+    <string name="toast_message_city_already_exists">This city is already in your favorites!</string>
+    <string name="toast_permission_true">Permission granted!</string>
+    <string name="toast_permission_false">Permission denied</string>
+    <string name="content_description_delete_image">Delete city</string>
+    <string name="content_description_add_city">Add city</string>
+
 </resources>

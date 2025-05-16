@@ -5,8 +5,6 @@ import android.view.animation.DecelerateInterpolator
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
 import androidx.lifecycle.ViewModel
-import com.example.weatherapp.R
-import com.example.weatherapp.databinding.FragmentMainBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -58,11 +56,11 @@ object AnimationUtils: ViewModel() {
             }
             .start()
     }
-    private val _isReady = MutableStateFlow(false)
-    val isReady = _isReady.asStateFlow()
+    private val isStartingWindowDone = MutableStateFlow(false)
+    val isReady = isStartingWindowDone.asStateFlow()
 
-    fun setReady() {
-        _isReady.value = true
+    fun setStartingWindowDone() {
+        isStartingWindowDone.value = true
     }
 }
 

@@ -1,7 +1,7 @@
 package com.example.weatherapp.utils
 
 import android.content.Context
-import java.util.Locale
+
 
 
 object SharedPreferences {

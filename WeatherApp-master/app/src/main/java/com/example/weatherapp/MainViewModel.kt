@@ -10,7 +10,4 @@ import kotlinx.coroutines.flow.asStateFlow
 class MainViewModel : ViewModel() {
     val liveDataCurrent = MutableLiveData<WeatherData>()
     val liveDataList = MutableLiveData<List<WeatherData>>()
-
-
-
 }

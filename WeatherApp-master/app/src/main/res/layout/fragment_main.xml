@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:src="@drawable/day_background"
+        android:background="@color/transparent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -62,7 +62,7 @@
             android:textAlignment="textStart">
 
             <ImageView
-                android:id="@+id/settingsIcon"
+                android:id="@+id/settings_activity_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:layout_margin="8dp"
@@ -79,37 +79,23 @@
 
             <TextView
                 android:id="@+id/cityNameTextView"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="40dp"
-                android:layout_marginEnd="30dp"
+                android:layout_marginTop="44dp"
                 android:text="@string/test"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toStartOf="@+id/settingsIcon"
-                app:layout_constraintStart_toEndOf="@+id/dateAndTimeTextView"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toStartOf="@+id/settings_activity_icon"
+                app:layout_constraintStart_toEndOf="@+id/cityActivityButton"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/dateAndTimeTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:text="14/14/2025"
-                app:layout_constraintBottom_toBottomOf="@+id/cityNameTextView"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/cityNameTextView" />
 
             <TextView
                 android:id="@+id/currentTempTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:layout_marginEnd="5dp"
+                android:layout_marginEnd="20dp"
                 android:text="14"
                 android:textColor="#FFFFFF"
                 android:textSize="70sp"
@@ -136,14 +122,13 @@
                 android:id="@+id/conditionStatusTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
                 android:layout_marginTop="5dp"
                 android:text="@string/test"
                 android:textAlignment="center"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="@+id/currentTempTextView"
-                app:layout_constraintStart_toStartOf="@+id/currentTempTextView"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/currentTempTextView" />
 
             <TextView
@@ -172,29 +157,22 @@
                 android:background="#00FFFFFF"
                 android:src="@android:drawable/ic_popup_sync"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
+                app:layout_constraintEnd_toEndOf="@+id/settings_activity_icon"
+                app:layout_constraintStart_toStartOf="@+id/settings_activity_icon" />
 
-            <EditText
-                android:id="@+id/editCityText"
-                android:layout_width="90sp"
-                android:layout_height="wrap_content"
+
+            <ImageButton
+                android:id="@+id/cityActivityButton"
+                android:layout_width="32sp"
+                android:layout_height="32sp"
+                android:layout_gravity="center_vertical"
                 android:layout_marginStart="5dp"
-                android:background="@drawable/edit_city_text"
-                android:cursorVisible="false"
-                android:hint="@string/search_bar"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:paddingStart="10sp"
-                android:textAlignment="textStart"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/syncButton"
-                app:layout_constraintHorizontal_bias="0.0"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/content_description_add_city"
+                android:src="@drawable/search_icon_add"
+                app:layout_constraintBottom_toBottomOf="@+id/cityNameTextView"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/tempMaxMinTextView"
-                app:layout_constraintVertical_bias="0.428"
-                android:autofillHints="" />
+                app:layout_constraintTop_toTopOf="@+id/cityNameTextView" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>

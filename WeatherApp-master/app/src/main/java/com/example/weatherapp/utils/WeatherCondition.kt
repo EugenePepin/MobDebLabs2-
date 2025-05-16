@@ -5,17 +5,23 @@ import com.example.weatherapp.R
 object WeatherCondition {
     val rainConditions = listOf(
         "patchy rain possible",
+        "patchy rain nearby",
         "moderate rain",
+        "light drizzle",
         "heavy rain",
         "light rain",
         "rain",
         "thundery outbreaks possible",
         "moderate or heavy rain with thunder",
+        "невелика злива",
         "можливі окремі дощі",
         "помірний дощ",
         "сильний дощ",
         "легкий дощ",
         "дощ",
+        "мряка",
+        "невеликий дощ зі снігом",
+        "місцями дощ",
         "можливі грозові пориви",
         "помірний або сильний дощ з грозою"
     )
@@ -54,6 +60,7 @@ object WeatherCondition {
         "cloudy",
         "overcast",
         "fog",
+        "суцільна хмарність",
         "невелика хмарність",
         "частково хмарно",
         "хмарно",
@@ -63,18 +70,18 @@ object WeatherCondition {
 
     private val conditionToBackground = buildMap {
         rainConditions.forEach { keyword ->
-            put(keyword, R.drawable.rain_background)
+            put(keyword, R.drawable.background_rain)
         }
         snowConditions.forEach { keyword ->
-            put(keyword, R.drawable.snow_background)
+            put(keyword, R.drawable.background_snow)
         }
         cloudCondition.forEach { keyword ->
-            put(keyword, R.drawable.cloud_background)
+            put(keyword, R.drawable.background_cloud)
         }
     }
 
     fun getBackgroundForCondition(condition: String): Int? {
-        val normalized = condition.trim().lowercase().replace("\\s+".toRegex(), " ")
+        val normalized = condition.trim().replace("\\s+".toRegex(), " ")
         return conditionToBackground.entries.firstOrNull { (key, _) ->
             normalized.contains(key)
         }?.value

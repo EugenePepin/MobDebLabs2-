@@ -1,6 +1,7 @@
 package com.example.weatherapp.fragment
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,14 +14,12 @@ import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.app.ActivityCompat.recreate
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
@@ -31,7 +30,7 @@ import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.weatherapp.BuildConfig
-import com.example.weatherapp.MainActivity
+import com.example.weatherapp.CitySearchActivity
 import com.example.weatherapp.MainViewModel
 import com.example.weatherapp.R
 import com.example.weatherapp.SettingsActivity
@@ -54,20 +53,33 @@ import com.google.android.material.tabs.TabLayoutMediator
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Locale
+import com.example.weatherapp.utils.CityTranslations
+import com.example.weatherapp.utils.LocaleHelper
 
 
 class MainFragment : Fragment() {
     private lateinit var lastUpdated: String
     private lateinit var clientLocation: FusedLocationProviderClient
     private lateinit var pLauncher: ActivityResultLauncher<String>
+    private lateinit var citySearchLauncher: ActivityResultLauncher<Intent>
+    lateinit var settingsLauncher: ActivityResultLauncher<Intent>
     private lateinit var binding: FragmentMainBinding
     private lateinit var tabList: List<String>
     private val dataModel: MainViewModel by activityViewModels()
+    private val sharedViewModel: SharedViewModel by activityViewModels()
+    class SharedViewModel : ViewModel() {
+        var lastUpdated: String = ""
+    }
     private val fragmentList = listOf(
         HoursFragment.NewInstance(), DaysFragment.NewInstance()
     )
-    private var lastCityOrLocation: String? = null
+    private var currentLocation: String? = null
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setupSettingsActivityResultLaunchers()
+        setupSearchCityActivityResultLaunchers()
+    }
 
 
     override fun onCreateView(
@@ -76,30 +88,28 @@ class MainFragment : Fragment() {
 
         binding = FragmentMainBinding.inflate(inflater, container, false)
         isLocationEnabled()
+        tabListInit()
         return binding.root
     }
 
     override fun onResume() {
         super.onResume()
-        isLocationEnabled()
-        checkLocationMessage()
+        if (isLocationEnabled()) {
+            getLocation()
+        }
         backgroundChange()
         updateCurrentCard()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        tabList = listOf(
-            getString(R.string.tabs_hours),
-            getString(R.string.tabs_days)
-        )
         super.onViewCreated(view, savedInstanceState)
         isLocationEnabled()
         checkPermission()
-        backgroundChange()
         init()
+        tabListInit()
         checkLocationMessage()
         updateCurrentCard()
-
+        backgroundChange()
     }
 
 
@@ -112,63 +122,7 @@ class MainFragment : Fragment() {
         TabLayoutMediator(tabLayout, viewPager) { tab, pos ->
             tab.text = tabList[pos]
         }.attach()
-        //функіонал для кнопки синхронізації
-        syncButton.setOnClickListener {
-            tabLayout.selectTab(tabLayout.getTabAt(0))
-            checkLocationMessage()
-            AnimationUtils.startUpdateIconRotateAnimation(binding.syncButton)
-        }
-
-        //функіонал для поля з текстом
-        editCityText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                val cityName = editCityText.text.toString()
-                requestCurrentWeatherData(cityName)
-                backgroundChange()
-                editCityText.setText("")
-
-                val inputMethodManager =
-                    requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                inputMethodManager.hideSoftInputFromWindow(editCityText.windowToken, 0)
-
-            }
-            backgroundChange()
-            true
-
-        }
-
-        binding.settingsIcon.setOnClickListener { view ->
-            binding.dimSettingsBackground.visibility = View.VISIBLE
-            val settingsMenu = PopupMenu(
-                ContextThemeWrapper(requireContext(), R.style.Theme_Weather_App_Setting_PopUpMenu),
-                view,
-                Gravity.END,
-                -5, 0
-            )
-            settingsMenu.menuInflater.inflate(R.menu.settings_menu, settingsMenu.menu)
-            settingsMenu.setOnMenuItemClickListener { menuItem ->
-                when (menuItem.itemId) {
-                    R.id.action_settings -> {
-                        val intent = Intent(requireContext(), SettingsActivity::class.java)
-                        (activity as MainActivity).settingsLauncher.launch(intent)
-                        true
-                    }
-                    else -> false
-                }
-            }
-
-            settingsMenu.setOnDismissListener {
-
-                binding.dimSettingsBackground.visibility = View.GONE
-            }
-
-            binding.dimSettingsBackground.setOnClickListener {
-
-                settingsMenu.dismiss()
-            }
-
-            settingsMenu.show()
-        }
+        buttonsInit()
     }
 
 
@@ -185,7 +139,8 @@ class MainFragment : Fragment() {
 
     private fun permissionListener() {
         pLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-            Toast.makeText(activity, "Permission is $it", Toast.LENGTH_LONG).show()
+            val message = if (it) R.string.toast_permission_true else R.string.toast_permission_false
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -206,7 +161,7 @@ class MainFragment : Fragment() {
         clientLocation.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, ct.token)
             .addOnCompleteListener {
                 val location = "${it.result.latitude},${it.result.longitude}"
-                lastCityOrLocation = location
+                currentLocation = location
                 requestCurrentWeatherData(location)
             }
     }
@@ -221,83 +176,40 @@ class MainFragment : Fragment() {
 
     //виведення AlertDialog при вимкненому розташуванні, і перекидування до налаштувань
     private fun checkLocationMessage() {
-        if (isLocationEnabled()) {
-            getLocation()
-        } else {
+        if (!isLocationEnabled()) {
             DialogManager.locationDialog(requireContext(), object : DialogManager.Listener {
                 override fun onClick(name: String?) {
                     startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                 }
+            }, onNoClick = {
+                activity?.finish()
             })
         }
-
     }
-
-    private fun backgroundChange(){
-        dataModel.liveDataCurrent.observe(viewLifecycleOwner) { weather ->
-            val condition = weather.conditionStatusData.lowercase()
-            val backgroundRes = WeatherCondition.getBackgroundForCondition(condition)
-
-
-            if (rainConditions.any { condition.contains(it) }) {
-                binding.animationView.visibility = View.VISIBLE
-                binding.animationView.setAnimation(R.raw.rain_animation)
-                binding.animationView.playAnimation()
-            }
-            else if (snowConditions.any { condition.contains(it) } ) {
-                binding.animationView.visibility = View.VISIBLE
-                binding.animationView.setAnimation(R.raw.snow_animation)
-                binding.animationView.playAnimation()
-            }
-            else {
-                binding.animationView.cancelAnimation()
-                binding.animationView.visibility = View.GONE
-            }
-
-            if (backgroundRes != null) {
-                AnimationUtils.smoothBackgroundChange(binding.imageView, binding.imageViewOverlay, backgroundRes)
-            } else {
-                val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-                val outputFormat = SimpleDateFormat("HH", Locale.getDefault())
-                val date = inputFormat.parse(lastUpdated)
-                val currentHour = outputFormat.format(date).toInt()
-
-                val fallbackRes = if (currentHour in 6..18) {
-                    R.drawable.day_background
-                } else {
-                    R.drawable.night_background
-                }
-                AnimationUtils.smoothBackgroundChange(binding.imageView, binding.imageViewOverlay, fallbackRes)
-            }
-        }
-
-
-    }
-
-
 
 
     //робимо запит до WeatherAPI
 
     private fun requestCurrentWeatherData(city: String) {
-        lastCityOrLocation = city
+        currentLocation = city
         val lang = SharedPreferences.getLanguage(requireContext())
+        val translatedCity = if (lang == "uk") {
+            CityTranslations.translateToEnglish(city)
+        } else {
+            city
+        }
         val url =
-            "https://api.weatherapi.com/v1/forecast.json?key=$API_KEY&q=$city&days=5&aqi=no&alerst=no&lang=$lang"
+            "https://api.weatherapi.com/v1/forecast.json?key=$API_KEY&q=$translatedCity&days=5&aqi=no&alerst=no&lang=$lang"
         val queue = Volley.newRequestQueue(context)
         val request = StringRequest(Request.Method.GET, url, { result ->
-            try {
-
-                val utf8Result = String(result.toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
-                parseWeatherData(utf8Result)
-            } catch (e: Exception) {
-                Log.e("WeatherApp", "Error parsing response: ${e.message}")
-                parseWeatherData(result)
-            }
+            val utf8Result = String(result.toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+            parseWeatherData(utf8Result)
         }, { error ->
             when (error) {
                 is NoConnectionError -> {
-                    noConnection(requireContext())
+                    noConnection(requireContext()) {
+                        activity?.finish()
+                    }
                 }
                 is ClientError -> {
                     incorrectCityName(requireContext())
@@ -318,36 +230,32 @@ class MainFragment : Fragment() {
 
     //витягаємо дані до картки з актуальною погодою
     private fun parseCurrentWeatherData(mainObject: JSONObject, weatherTempItem: WeatherData) {
-        try {
-            lastUpdated = mainObject.getJSONObject("current").getString("last_updated")
-            sharedViewModel.lastUpdated = lastUpdated
-            
-            val locationName = mainObject.getJSONObject("location").getString("name")
-            val conditionText = mainObject.getJSONObject("current").getJSONObject("condition").getString("text")
-            
-            val item = WeatherData(
-                locationName,
-                mainObject.getJSONObject("current").getString("last_updated"),
-                conditionText,
-                mainObject.getJSONObject("current").getString("temp_c").toFloat().toInt().toString(),
-                mainObject.getJSONObject("current").getString("temp_f").toFloat().toInt().toString(),
-                mainObject.getJSONObject("current").getJSONObject("condition").getString("icon"),
-                weatherTempItem.maxTempDataCelsius,
-                weatherTempItem.minTempDataCelsius,
-                weatherTempItem.maxTempDataFahrenheit,
-                weatherTempItem.minTempDataFahrenheit,
-                weatherTempItem.hoursData
-            )
-            dataModel.liveDataCurrent.value = item
-            AnimationUtils.stopUpdateIconRotateAnimation(binding.syncButton)
-        } catch (e: Exception) {
-            Log.e("WeatherApp", "Error parsing weather data: ${e.message}")
+        lastUpdated = mainObject.getJSONObject("current").getString("last_updated")
+        sharedViewModel.lastUpdated = lastUpdated
+        
+        val locationName = mainObject.getJSONObject("location").getString("name")
+        val translatedLocationName = if (SharedPreferences.getLanguage(requireContext()) == "uk") {
+            CityTranslations.translateToUkrainian(locationName)
+        } else {
+            locationName
         }
-    }
-
-    private val sharedViewModel: SharedViewModel by activityViewModels()
-    class SharedViewModel : ViewModel() {
-        var lastUpdated: String = ""
+        val conditionText = mainObject.getJSONObject("current").getJSONObject("condition").getString("text")
+        
+        val item = WeatherData(
+            translatedLocationName,
+            mainObject.getJSONObject("current").getString("last_updated"),
+            conditionText,
+            mainObject.getJSONObject("current").getString("temp_c").toFloat().toInt().toString(),
+            mainObject.getJSONObject("current").getString("temp_f").toFloat().toInt().toString(),
+            mainObject.getJSONObject("current").getJSONObject("condition").getString("icon"),
+            weatherTempItem.maxTempDataCelsius,
+            weatherTempItem.minTempDataCelsius,
+            weatherTempItem.maxTempDataFahrenheit,
+            weatherTempItem.minTempDataFahrenheit,
+            weatherTempItem.hoursData
+        )
+        dataModel.liveDataCurrent.value = item
+        AnimationUtils.stopUpdateIconRotateAnimation(binding.syncButton)
     }
 
     //витягаємо дані для днів
@@ -356,10 +264,15 @@ class MainFragment : Fragment() {
         val daysArray = mainObject.getJSONObject("forecast")
             .getJSONArray("forecastday")
         val name = mainObject.getJSONObject("location").getString("name")
+        val translatedName = if (SharedPreferences.getLanguage(requireContext()) == "uk") {
+            CityTranslations.translateToUkrainian(name)
+        } else {
+            name
+        }
         for (i in 0 until daysArray.length()) {
             val day = daysArray[i] as JSONObject
             val item = WeatherData(
-                name,
+                translatedName,
                 day.getString("date"),
                 day.getJSONObject("day").getJSONObject("condition")
                     .getString("text"),
@@ -377,21 +290,12 @@ class MainFragment : Fragment() {
         }
         dataModel.liveDataList.value = list
         return list
-
     }
 
 
     //додаємо дані до картки з актуальною погодою
     private fun updateCurrentCard() = with(binding) {
         dataModel.liveDataCurrent.observe(viewLifecycleOwner) {
-            try {
-                dateAndTimeTextView.text = it.dateAndTimeData
-                    .substringBefore(" ")
-                    .replace("-", "/")
-                    .split("/")
-                    .reversed()
-                    .joinToString("/")
-
                 cityNameTextView.text = it.cityNameData
 
                 val isCelsius = SharedPreferences.getTemperatureUnit(requireContext())
@@ -411,29 +315,134 @@ class MainFragment : Fragment() {
                 }
 
                 backgroundChange()
-                AnimationUtils.setReady()
-            } catch (e: Exception) {
-                Log.e("WeatherApp", "Error updating UI: ${e.message}")
-            }
+                AnimationUtils.setStartingWindowDone()
+
         }
     }
 
-    fun updateUI() {
+    private fun setupSearchCityActivityResultLaunchers(){
+        settingsLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            if (result.resultCode == AppCompatActivity.RESULT_OK) {
+                val savedLanguage = SharedPreferences.getLanguage(requireContext())
+                LocaleHelper.updateLocale(requireContext(), savedLanguage)
+                updateUI()
+            }
+        }
+    }
+    private fun setupSettingsActivityResultLaunchers() {
+        citySearchLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                result.data?.getStringExtra("city")?.let { city ->
+                    requestCurrentWeatherData(city)
+                }
+            }
+        }
+    }
+    private fun updateUI() {
         binding.apply {
-            tabList = listOf(
-                getString(R.string.tabs_hours),
-                getString(R.string.tabs_days)
-            )
+            tabListInit()
             for (i in 0 until tabLayout.tabCount) {
                 tabLayout.getTabAt(i)?.text = tabList[i]
             }
             updateCurrentCard()
+            currentLocation?.let { requestCurrentWeatherData(it) }
+        }
+    }
+    private fun backgroundChange(){
+        dataModel.liveDataCurrent.observe(viewLifecycleOwner) { weather ->
+            val condition = weather.conditionStatusData.lowercase()
+            val backgroundRes = WeatherCondition.getBackgroundForCondition(condition)
 
-            lastCityOrLocation?.let { requestCurrentWeatherData(it) }
+
+            if (rainConditions.any { condition.contains(it) }) {
+                binding.animationView.visibility = View.VISIBLE
+                binding.animationView.setAnimation(R.raw.animation_rain)
+                binding.animationView.playAnimation()
+            }
+            else if (snowConditions.any { condition.contains(it) } ) {
+                binding.animationView.visibility = View.VISIBLE
+                binding.animationView.setAnimation(R.raw.animation_snow)
+                binding.animationView.playAnimation()
+            }
+            else {
+                binding.animationView.cancelAnimation()
+                binding.animationView.visibility = View.GONE
+            }
+
+            if (backgroundRes != null) {
+                AnimationUtils.smoothBackgroundChange(binding.imageView, binding.imageViewOverlay, backgroundRes)
+            } else {
+                val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("HH", Locale.getDefault())
+                val date = inputFormat.parse(lastUpdated)
+                val currentHour = outputFormat.format(date).toInt()
+
+                val fallbackRes = if (currentHour in 6..18) {
+                    R.drawable.background_day
+                } else {
+                    R.drawable.background_night
+                }
+                AnimationUtils.smoothBackgroundChange(binding.imageView, binding.imageViewOverlay, fallbackRes)
+            }
+        }
+
+
+    }
+
+    private fun buttonsInit() = with(binding) {
+        syncButton.setOnClickListener {
+            tabLayout.selectTab(tabLayout.getTabAt(0))
+            currentLocation?.let { requestCurrentWeatherData(it) }
+            AnimationUtils.startUpdateIconRotateAnimation(binding.syncButton)
+        }
+
+        cityActivityButton.setOnClickListener {
+            val intent = Intent(requireContext(), CitySearchActivity::class.java)
+            citySearchLauncher.launch(intent)
+        }
+
+        settingsActivityIcon.setOnClickListener { view ->
+            dimSettingsBackground.visibility = View.VISIBLE
+            val settingsMenu = PopupMenu(
+                ContextThemeWrapper(requireContext(), R.style.Theme_Weather_App_Setting_PopUpMenu),
+                view,
+                Gravity.END,
+                -5, 0
+            )
+            settingsMenu.menuInflater.inflate(R.menu.settings_menu, settingsMenu.menu)
+            settingsMenu.setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.action_settings -> {
+                        val intent = Intent(requireContext(), SettingsActivity::class.java)
+                        settingsLauncher.launch(intent)
+                        true
+                    }
+                    else -> false
+                }
+            }
+
+            settingsMenu.setOnDismissListener {
+
+                dimSettingsBackground.visibility = View.GONE
+            }
+
+            dimSettingsBackground.setOnClickListener {
+
+                settingsMenu.dismiss()
+            }
+
+            settingsMenu.show()
         }
     }
 
-
+    private fun tabListInit() {
+        tabList = listOf(
+            getString(R.string.tabs_hours),
+            getString(R.string.tabs_days)
+        )
+    }
 
 
     companion object {

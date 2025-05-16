@@ -17,6 +17,7 @@ class DaysFragment : Fragment(), ListenerAdapter.Listener {
     private lateinit var adapter: ListenerAdapter
     private lateinit var binding: FragmentDaysBinding
     private val dataModel: MainViewModel by activityViewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -25,38 +26,35 @@ class DaysFragment : Fragment(), ListenerAdapter.Listener {
         return binding.root
     }
 
-    //оновлення даних при виході з вкладки Settings
     override fun onResume() {
         super.onResume()
         updateCurrentCard()
-        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         updateCurrentCard()
-        }
+    }
 
-
-    private fun updateCurrentCard(){
+    private fun updateCurrentCard() {
         init()
         dataModel.liveDataList.observe(viewLifecycleOwner) {
             adapter.submitList(it.subList(1, it.size))
         }
     }
+
     private fun init() = with(binding) {
         adapter = ListenerAdapter(this@DaysFragment)
         daysRecyclerView.layoutManager = LinearLayoutManager(activity)
         daysRecyclerView.adapter = adapter
     }
 
-    companion object {
-
-        @JvmStatic
-
-        fun NewInstance() = DaysFragment()
-    }
-
     override fun onClick(item: WeatherData) {
         dataModel.liveDataCurrent.value = item
+    }
+
+    companion object {
+        @JvmStatic
+        fun NewInstance() = DaysFragment()
     }
 }

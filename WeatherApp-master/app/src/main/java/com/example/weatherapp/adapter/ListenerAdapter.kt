@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.weatherapp.R
+import com.example.weatherapp.databinding.ListItemCardViewBinding
 import com.example.weatherapp.utils.WeatherData
-import com.example.weatherapp.databinding.ListItemBinding
 import com.example.weatherapp.utils.SharedPreferences
 import com.squareup.picasso.Picasso
 
@@ -16,7 +16,7 @@ class ListenerAdapter(val listener: Listener?) :
     ListAdapter<WeatherData, ListenerAdapter.Holder>(Comparator()) {
 
     class Holder(view: View, val listener: Listener?) : RecyclerView.ViewHolder(view) {
-        private val binding = ListItemBinding.bind(view)
+        private val binding = ListItemCardViewBinding.bind(view)
         private var itemTemp: WeatherData? = null
 
         init {
@@ -40,7 +40,7 @@ class ListenerAdapter(val listener: Listener?) :
 
             val isCelsius = SharedPreferences.getTemperatureUnit(root.context)
 
-            // Температури
+
             val currentTemp = if (isCelsius) item.currentTempDataCelsius else item.currentTempDataFahrenheit
             val maxTemp = if (isCelsius) item.maxTempDataCelsius else item.maxTempDataFahrenheit
             val minTemp = if (isCelsius) item.minTempDataCelsius else item.minTempDataFahrenheit
@@ -78,7 +78,7 @@ class ListenerAdapter(val listener: Listener?) :
     //заповнення списку від 0 позиції
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item_card_view, parent, false)
         return Holder(view, listener)
     }
 

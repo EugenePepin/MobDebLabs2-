@@ -13,4 +13,14 @@
     <string name="dialog_manager_no">No</string>
     <string name="dialog_manager_incorrect_city_name">Incorrect city name. Try again…</string>
     <string name="dialog_manager_сant_connect_to_network">Can\'t connect to the network. Try again…</string>
+    <string name="setting_list_temp_unit_label">Choose a unit of temperature:</string>
+    <string name="setting_list_language_label">Choose a language:</string>
+    <string name="toast_message_city_added">City added to favorites!</string>
+    <string name="toast_message_city_deleted">City removed from list!</string>
+    <string name="toast_message_city_already_exists">This city is already in your favorites!</string>
+    <string name="toast_permission_true">Permission granted!</string>
+    <string name="toast_permission_false">Permission denied!</string>
+    <string name="content_description_delete_image">Delete city</string>
+    <string name="content_description_add_city">Add city</string>
+    <string name="toast_message_offline_data">Data from the last update are displayed</string>
 </resources>
